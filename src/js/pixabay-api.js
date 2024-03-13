@@ -27,6 +27,7 @@ import axios from 'axios';
 axios.defaults.baseURL = 'https://pixabay.com/api/';
 
 export async function getPhotos(query, page, perPage) {
+  console.log(query, page, perPage);
   const { data } = await axios.get('', {
     params: {
       key: '42801322-2062a11e10d8e6d4e2ccea576',

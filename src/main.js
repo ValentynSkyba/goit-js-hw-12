@@ -15,7 +15,7 @@ const msgEndLoad = "We're sorry, but you've reached the end of search results.";
 
 let userWord;
 let page;
-const perPage = 15;
+let perPage = 15;
 let lastPage;
 
 formEl.addEventListener('submit', onSubmitBtn);
@@ -26,9 +26,10 @@ async function onSubmitBtn(e) {
   showLoader();
   clearMarkup();
   loadMoreBtnHide();
+  page = 1;
 
   const userQuery = e.target.elements.data.value.trim().split(' ');
-  const userWord = userQuery.filter(word => word).join('+');
+  userWord = userQuery.filter(word => word).join('+');
 
   if (!userWord) {
     clearMarkup();
@@ -36,7 +37,7 @@ async function onSubmitBtn(e) {
     hideLoader();
     return;
   }
-
+  console.log(page);
   try {
     const res = await getPhotos(userWord, page, perPage);
 
@@ -48,9 +49,11 @@ async function onSubmitBtn(e) {
       loadMoreBtnShow();
     }
     hideLoader();
-    if (res.data.totalHits <= perPage) {
-      hideLoadBtn();
+    if (res.totalHits <= perPage) {
+      loadMoreBtnHide();
     }
+    lastPage = Math.ceil(res.totalHits / perPage);
+    lastPageMsg();
   } catch (error) {
     console.log(error);
     hideLoader();
@@ -60,23 +63,26 @@ async function onSubmitBtn(e) {
 }
 
 async function onBtnClick() {
+  showLoader();
   page += 1;
 
   try {
-    showLoader();
     const res = await getPhotos(userWord, page, perPage);
-    const lastPage = Math.ceil(res.data.totalHits / perPage);
+    renderImages(res.hits);
 
-    renderImages(res.data.hits);
-
-    if (page === lastPage) {
-      loadMoreBtnHide();
-      showMessage(msgEndLoad);
-    }
+    forScroll();
+    lastPageMsg();
     hideLoader();
   } catch (error) {
     console.log(error);
     hideLoader();
+  }
+}
+
+function lastPageMsg() {
+  if (page === lastPage) {
+    loadMoreBtnHide();
+    showMessage(msgEndLoad);
   }
 }
 
@@ -87,6 +93,7 @@ function showLoader(container) {
 function hideLoader(container) {
   loader.classList.add('is-hide');
 }
+
 function showMessage(message) {
   const msgOptions = {
     message,
@@ -109,4 +116,12 @@ function loadMoreBtnShow() {
 }
 function loadMoreBtnHide() {
   loadMoreBtn.classList.add('is-hidden');
+}
+
+function forScroll() {
+  const height = gallery.firstElementChild.getBoundingClientRect().height * 2;
+  window.scrollBy({
+    behavior: 'smooth',
+    top: height,
+  });
 }
